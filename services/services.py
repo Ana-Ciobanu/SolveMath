@@ -5,6 +5,7 @@ from fastapi_cache.decorator import cache
 
 logger = logging.getLogger(__name__)
 
+
 @cache(expire=60)  # cache result for 60 seconds
 async def calculate_pow(base: float, exponent: float) -> float:
     try:
@@ -13,6 +14,7 @@ async def calculate_pow(base: float, exponent: float) -> float:
     except Exception as e:
         logger.error(f"Error in calculate_pow: {e}")
         raise
+
 
 @cache(expire=60)
 async def calculate_fibonacci(n: int) -> int:
@@ -29,6 +31,7 @@ async def calculate_fibonacci(n: int) -> int:
         logger.error(f"Error in calculate_fibonacci: {e}")
         raise
 
+
 @cache(expire=60)
 async def calculate_factorial(n: int) -> int:
     try:
@@ -37,19 +40,22 @@ async def calculate_factorial(n: int) -> int:
             logger.error("n must be >= 0 for factorial")
             raise ValueError("n must be >= 0")
         result = 1
-        for i in range(2, n+1):
+        for i in range(2, n + 1):
             result *= i
         return result
     except Exception as e:
         logger.error(f"Error in calculate_factorial: {e}")
         raise
 
+
 def persist_request(db: Session, operation: str, param1, param2, result):
     try:
         req = MathRequest(operation=operation, param1=param1, param2=param2, result=str(result))
         db.add(req)
         db.commit()
-        logger.info(f"Persisted request: {operation} with params {param1}, {param2} and result {result}")
+        logger.info(
+            f"Persisted request: {operation} with params {param1}, {param2} and result {result}"
+        )
     except Exception as e:
         logger.error(f"Error persisting request: {e}")
         db.rollback()
