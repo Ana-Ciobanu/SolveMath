@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from schemas.schemas import PowRequest, FibonacciRequest, FactorialRequest, MathResponse
 from services.services import calculate_pow, calculate_fibonacci, calculate_factorial, persist_request

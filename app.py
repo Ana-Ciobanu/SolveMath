@@ -5,6 +5,12 @@ from controllers.controllers import router
 from db.database import engine
 from models.models import Base
 from prometheus_fastapi_instrumentator import Instrumentator
+import logging
+from utils.logging_db import DBLogHandler
+
+db_handler = DBLogHandler()
+db_handler.setLevel(logging.INFO)
+logging.getLogger().addHandler(db_handler)
 
 def setup_monitoring(app):
     Instrumentator().instrument(app).expose(app)
@@ -17,6 +23,7 @@ app.mount("/view", StaticFiles(directory="view"), name="view")
 @app.get("/")
 def read_root():
     return FileResponse("view/frontend.html")
+
 
 setup_monitoring(app)
 
