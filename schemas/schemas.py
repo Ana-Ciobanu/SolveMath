@@ -16,3 +16,12 @@ class MathResponse(BaseModel):
     input: Dict[str, Any]
     result: Any
 
+class UserCreate(BaseModel):
+    username: str
+    password: str
+
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
+
