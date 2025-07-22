@@ -14,6 +14,11 @@ from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 from controllers.controllers import verify_token
 from fastapi.responses import Response
 
+
+app = FastAPI(title="Math Operations API", version="1.0")
+app.include_router(router)
+
+
 db_handler = DBLogHandler()
 db_handler.setLevel(logging.INFO)
 logging.getLogger().addHandler(db_handler)
@@ -21,10 +26,6 @@ logging.getLogger().addHandler(db_handler)
 
 def setup_monitoring(app):
     Instrumentator().instrument(app)
-
-
-app = FastAPI(title="Math Operations API", version="1.0")
-app.include_router(router)
 
 
 app.mount("/view", StaticFiles(directory="view"), name="view")
