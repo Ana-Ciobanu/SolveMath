@@ -1,18 +1,22 @@
 import logging
 from sqlalchemy.orm import Session
 from models.models import MathRequest
+from fastapi_cache.decorator import cache
 
 logger = logging.getLogger(__name__)
 
-def calculate_pow(base: float, exponent: float) -> float:
+@cache(expire=60)  # cache result for 60 seconds
+async def calculate_pow(base: float, exponent: float) -> float:
     try:
         logger.info(f"Calculating pow({base}, {exponent})")
+        print("Calculating power operation")
         return pow(base, exponent)
     except Exception as e:
         logger.error(f"Error in calculate_pow: {e}")
         raise
 
-def calculate_fibonacci(n: int) -> int:
+@cache(expire=60)
+async def calculate_fibonacci(n: int) -> int:
     try:
         logger.info(f"Calculating fibonacci({n})")
         if n < 0:
@@ -26,7 +30,8 @@ def calculate_fibonacci(n: int) -> int:
         logger.error(f"Error in calculate_fibonacci: {e}")
         raise
 
-def calculate_factorial(n: int) -> int:
+@cache(expire=60)
+async def calculate_factorial(n: int) -> int:
     try:
         logger.info(f"Calculating factorial({n})")
         if n < 0:

@@ -7,6 +7,8 @@ from models.models import Base
 from prometheus_fastapi_instrumentator import Instrumentator
 import logging
 from utils.logging_db import DBLogHandler
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.inmemory import InMemoryBackend
 
 db_handler = DBLogHandler()
 db_handler.setLevel(logging.INFO)
@@ -24,6 +26,9 @@ app.mount("/view", StaticFiles(directory="view"), name="view")
 def read_root():
     return FileResponse("view/frontend.html")
 
+@app.on_event("startup")
+async def startup():
+    FastAPICache.init(InMemoryBackend())
 
 setup_monitoring(app)
 
