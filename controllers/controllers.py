@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Header
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from schemas.schemas import PowRequest, FibonacciRequest, FactorialRequest, MathResponse
 from services.services import calculate_pow, calculate_fibonacci, calculate_factorial, persist_request
@@ -59,9 +59,9 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    token = jwt.encode({"sub": user.username}, SECRET_KEY, algorithm=ALGORITHM)
+    role = "admin" if user.username == "admin" else "user"  # simple hardcoded logic
+    token = jwt.encode({"sub": user.username, "role": role, "exp": expire}, SECRET_KEY, algorithm=ALGORITHM)
     return {"access_token": token, "token_type": "bearer"}
-
 
 @router.post("/pow", response_model=MathResponse)
 async def pow_endpoint(request: PowRequest, db: Session = Depends(get_db), token: dict = Depends(verify_token)):

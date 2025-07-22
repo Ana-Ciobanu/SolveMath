@@ -89,6 +89,12 @@
     </style>
 </head>
 <body>
+    <div id="admin-panel" style="display:none; margin-top: 30px;">
+    <h2>Admin Panel</h2>
+    <button id="metrics-btn">View Metrics</button>
+    <pre id="metrics-output" style="white-space: pre-wrap; background:#f0f0f0; padding:10px; margin-top:10px;"></pre>
+    </div>
+
     <div class="container">
         <h1>Math Operations</h1>
 
@@ -193,6 +199,7 @@
             document.getElementById("math-section").style.display = "none";
             document.getElementById("welcome-section").style.display = "none";
             document.getElementById("auth-section").style.display = "block";
+            document.getElementById("admin-panel").style.display = "none";
             clearMessages();
         }
 
@@ -241,6 +248,15 @@
                     return;
                 }
                 accessToken = json.access_token;
+                const payloadBase64 = accessToken.split('.')[1];
+                const payload = JSON.parse(atob(payloadBase64));
+
+                // Check if admin
+                if (payload.role === "admin") {
+                    document.getElementById("admin-panel").style.display = "block";
+                } else {
+                    document.getElementById("admin-panel").style.display = "none";
+                }
                 currentUser = username;
                 showResult("login-result", "Login successful!");
                 showMathSection();
@@ -249,6 +265,28 @@
                 showError("login-result", "Login error: " + err.message);
             }
         };
+        // Show admin panel if user is logged in
+        document.getElementById("metrics-btn").onclick = async function () {
+            try {
+                const res = await fetch("/admin/metrics", {
+                    headers: {
+                        "Authorization": "Bearer " + accessToken
+                    }
+                });
+
+                if (!res.ok) {
+                    const errorText = await res.text();
+                    document.getElementById("metrics-output").innerText = "Error: " + errorText;
+                    return;
+                }
+
+                const text = await res.text();
+                document.getElementById("metrics-output").innerText = text;
+            } catch (err) {
+                document.getElementById("metrics-output").innerText = "Request failed: " + err.message;
+            }
+        };
+
 
         // Math handler
         async function handleForm(endpoint, data, resultDivId) {

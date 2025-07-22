@@ -9,7 +9,6 @@ logger = logging.getLogger(__name__)
 async def calculate_pow(base: float, exponent: float) -> float:
     try:
         logger.info(f"Calculating pow({base}, {exponent})")
-        print("Calculating power operation")
         return pow(base, exponent)
     except Exception as e:
         logger.error(f"Error in calculate_pow: {e}")
