@@ -45,7 +45,7 @@ This project implements a microservice for solving mathematical operations via a
 
 1. Install dependencies:  
    `pip install -r requirements.txt`
-2. Set up your `.env` file with the required secrets.
+2. Set up your `.env` file with the required environment variables.
 3. Start the service:  
    `uvicorn app:app --reload`
 4. Access the frontend at `http://localhost:8000`
