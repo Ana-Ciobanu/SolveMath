@@ -92,7 +92,11 @@
     <div id="admin-panel" style="display:none; margin-top: 30px;">
     <h2>Admin Panel</h2>
     <button id="metrics-btn">View Metrics</button>
-    <pre id="metrics-output" style="white-space: pre-wrap; background:#f0f0f0; padding:10px; margin-top:10px;"></pre>
+    <button id="requests-btn">View Requests</button>
+    <button id="logs-btn">View Logs</button>
+    <pre id="metrics-output" style="display:none; white-space: pre-wrap; background:#f0f0f0; padding:10px; margin-top:10px;"></pre>
+    <pre id="requests-output" style="display:none; white-space: pre-wrap; background:#f0f0f0; padding:10px; margin-top:10px;"></pre>
+    <pre id="logs-output" style="display:none; white-space: pre-wrap; background:#f0f0f0; padding:10px; margin-top:10px;"></pre>
     </div>
 
     <div class="container">
@@ -266,28 +270,86 @@
             }
         };
         // Show admin panel if user is logged in
+        // Toggle Metrics
         document.getElementById("metrics-btn").onclick = async function () {
+            const output = document.getElementById("metrics-output");
+            if (output.style.display === "block") {
+                output.style.display = "none";
+                return;
+            }
+
             try {
                 const res = await fetch("/admin/metrics", {
-                    headers: {
-                        "Authorization": "Bearer " + accessToken
-                    }
+                    headers: { "Authorization": "Bearer " + accessToken }
                 });
 
                 if (!res.ok) {
-                    const errorText = await res.text();
-                    document.getElementById("metrics-output").innerText = "Error: " + errorText;
-                    return;
+                    output.innerText = "Error: " + await res.text();
+                } else {
+                    const text = await res.text();
+                    output.innerText = text;
                 }
 
-                const text = await res.text();
-                document.getElementById("metrics-output").innerText = text;
+                output.style.display = "block";
             } catch (err) {
-                document.getElementById("metrics-output").innerText = "Request failed: " + err.message;
+                output.innerText = "Request failed: " + err.message;
+                output.style.display = "block";
             }
         };
 
+        // Toggle Requests
+        document.getElementById("requests-btn").onclick = async function () {
+            const output = document.getElementById("requests-output");
+            if (output.style.display === "block") {
+                output.style.display = "none";
+                return;
+            }
 
+            try {
+                const res = await fetch("/admin/requests", {
+                    headers: { "Authorization": "Bearer " + accessToken }
+                });
+
+                if (!res.ok) {
+                    output.innerText = "Error: " + await res.text();
+                } else {
+                    const data = await res.json();
+                    output.innerText = JSON.stringify(data, null, 2);
+                }
+
+                output.style.display = "block";
+            } catch (err) {
+                output.innerText = "Request failed: " + err.message;
+                output.style.display = "block";
+            }
+        };
+
+        // Toggle Logs
+        document.getElementById("logs-btn").onclick = async function () {
+            const output = document.getElementById("logs-output");
+            if (output.style.display === "block") {
+                output.style.display = "none";
+                return;
+            }
+
+            try {
+                const res = await fetch("/admin/logs", {
+                    headers: { "Authorization": "Bearer " + accessToken }
+                });
+
+                if (!res.ok) {
+                    output.innerText = "Error: " + await res.text();
+                } else {
+                    const data = await res.json();
+                    output.innerText = JSON.stringify(data, null, 2);
+                }
+
+                output.style.display = "block";
+            } catch (err) {
+                output.innerText = "Request failed: " + err.message;
+                output.style.display = "block";
+            }
+        };
         // Math handler
         async function handleForm(endpoint, data, resultDivId) {
             if (!accessToken) {

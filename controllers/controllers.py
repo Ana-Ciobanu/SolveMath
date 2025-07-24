@@ -8,7 +8,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from fastapi.security import OAuth2PasswordBearer
-from models.models import User
+from models.models import User, MathRequest, LogEntry
 from schemas.schemas import UserCreate
 from passlib.context import CryptContext
 import os
@@ -102,3 +102,37 @@ async def factorial_endpoint(
     result = await calculate_factorial(request.n)
     persist_request(db, "factorial", request.n, None, result)
     return MathResponse(operation="factorial", input={"n": request.n}, result=result)
+
+
+@router.get("/admin/requests")
+def get_math_requests(db: Session = Depends(get_db), token: dict = Depends(verify_token)):
+    if token.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    requests = db.query(MathRequest).order_by(MathRequest.timestamp.desc()).limit(100).all()
+    return [
+        {
+            "id": r.id,
+            "operation": r.operation,
+            "param1": r.param1,
+            "param2": r.param2,
+            "result": r.result,
+            "timestamp": r.timestamp.isoformat()
+        }
+        for r in requests
+    ]
+
+
+@router.get("/admin/logs")
+def get_log_entries(db: Session = Depends(get_db), token: dict = Depends(verify_token)):
+    if token.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    logs = db.query(LogEntry).order_by(LogEntry.timestamp.desc()).limit(100).all()
+    return [
+        {
+            "id": l.id,
+            "level": l.level,
+            "message": l.message,
+            "timestamp": l.timestamp.isoformat()
+        }
+        for l in logs
+    ]
