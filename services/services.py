@@ -6,7 +6,7 @@ from fastapi_cache.decorator import cache
 logger = logging.getLogger(__name__)
 
 
-@cache(expire=60)  # cache result for 60 seconds
+@cache(expire=3600) # Cache for 1 hour
 async def calculate_pow(base: float, exponent: float) -> float:
     try:
         logger.info(f"Calculating pow({base}, {exponent})")
@@ -16,7 +16,7 @@ async def calculate_pow(base: float, exponent: float) -> float:
         raise
 
 
-@cache(expire=60)
+@cache(expire=3600)
 async def calculate_fibonacci(n: int) -> int:
     try:
         logger.info(f"Calculating fibonacci({n})")
@@ -32,7 +32,7 @@ async def calculate_fibonacci(n: int) -> int:
         raise
 
 
-@cache(expire=60)
+@cache(expire=3600)
 async def calculate_factorial(n: int) -> int:
     try:
         logger.info(f"Calculating factorial({n})")

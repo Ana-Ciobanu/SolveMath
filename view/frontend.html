@@ -134,8 +134,8 @@
             <!-- Power -->
             <h2>Power</h2>
             <form id="pow-form">
-                <input type="number" step="any" id="pow-base" placeholder="Base" required>
-                <input type="number" step="any" id="pow-exponent" placeholder="Exponent" required>
+                <input type="number" step="any" id="pow-base" placeholder="Base" required min="-1000000" max="1000000">
+                <input type="number" step="any" id="pow-exponent" placeholder="Exponent" required min="-1000" max="1000">
                 <button type="submit">Calculate</button>
             </form>
             <div id="pow-result"></div>
@@ -143,7 +143,7 @@
             <!-- Fibonacci -->
             <h2>Fibonacci</h2>
             <form id="fib-form">
-                <input type="number" id="fib-n" placeholder="n" required>
+                <input type="number" id="fib-n" placeholder="n" required min="0" max="20000">
                 <button type="submit">Calculate</button>
             </form>
             <div id="fib-result"></div>
@@ -151,7 +151,7 @@
             <!-- Factorial -->
             <h2>Factorial</h2>
             <form id="fact-form">
-                <input type="number" id="fact-n" placeholder="n" required>
+                <input type="number" id="fact-n" placeholder="n" required min="0" max="1550">
                 <button type="submit">Calculate</button>
             </form>
             <div id="fact-result"></div>
