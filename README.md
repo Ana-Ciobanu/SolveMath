@@ -20,7 +20,7 @@ This project implements a microservice for solving mathematical operations via a
 
 ## Security & Production Readiness
 
-- **Secrets Management**: All sensitive configuration (JWT secret, algorithm, token expiry) is stored in a `.env` file and loaded using `python-dotenv`. No data is hardcoded in the codebase.
+- **Secure Configuration Management**: All sensitive configuration (JWT secret, algorithm, token expiry) is stored in a `.env` file and loaded using `python-dotenv`. No data is hardcoded in the codebase.
 - **Role-Based Access Control (RBAC)**: User roles are stored in the database. All users registered via the frontend or API are assigned the `user` role by default. The `admin` role is reserved and cannot be registered via the public API. Admin accounts are created securely using environment variables and a dedicated script. Only users with the `admin` role can access sensitive endpoints like metrics, logs, and requests.
 - **Input Validation**: Both frontend and backend validate user input to prevent invalid or malicious requests.
 - **Extensibility**: The codebase is organized using MVC/MVCS patterns, making it easy to add new operations or extend functionality.
