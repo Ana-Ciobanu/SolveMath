@@ -48,13 +48,18 @@ router = APIRouter()
 
 @router.post("/register")
 def register(user: UserCreate, db: Session = Depends(get_db)):
+
+    # Prevent registration with username 'admin'
+    if user.username.lower() == "admin":
+        raise HTTPException(status_code=400, detail="Registration with username 'admin' is not allowed")
+
     # Check if user exists
     db_user = db.query(User).filter(User.username == user.username).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Username already registered")
 
     hashed_pw = get_password_hash(user.password)
-    new_user = User(username=user.username, hashed_password=hashed_pw)
+    new_user = User(username=user.username, hashed_password=hashed_pw, role="user")
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
@@ -68,9 +73,9 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    role = "admin" if user.username == "admin" else "user"  # simple hardcoded logic
     token = jwt.encode(
-        {"sub": user.username, "role": role, "exp": expire}, SECRET_KEY, algorithm=ALGORITHM
+        {"sub": user.username, "role": user.role, "exp": expire},
+        SECRET_KEY, algorithm=ALGORITHM
     )
     return {"access_token": token, "token_type": "bearer"}
 

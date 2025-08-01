@@ -21,7 +21,7 @@ This project implements a microservice for solving mathematical operations via a
 ## Security & Production Readiness
 
 - **Secrets Management**: All sensitive configuration (JWT secret, algorithm, token expiry) is stored in a `.env` file and loaded using `python-dotenv`. No data is hardcoded in the codebase.
-- **Role-Based Access Control**: The admin role is required for accessing sensitive endpoints like metrics, logs, requests.
+- **Role-Based Access Control (RBAC)**: User roles are stored in the database. All users registered via the frontend or API are assigned the `user` role by default. The `admin` role is reserved and cannot be registered via the public API. Admin accounts are created securely using environment variables and a dedicated script. Only users with the `admin` role can access sensitive endpoints like metrics, logs, and requests.
 - **Input Validation**: Both frontend and backend validate user input to prevent invalid or malicious requests.
 - **Extensibility**: The codebase is organized using MVC/MVCS patterns, making it easy to add new operations or extend functionality.
 
@@ -55,4 +55,7 @@ This project implements a microservice for solving mathematical operations via a
 
 ## Notes
 
-- For demo purposes, the admin role is assigned to the user with username `admin`.
+**RBAC Summary:**
+    - All users are assigned the `user` role by default.
+    - The `admin` role is only assigned via the admin creation script and cannot be set through registration.
+    - JWT tokens include the user's role, which is checked for access to protected endpoints.
