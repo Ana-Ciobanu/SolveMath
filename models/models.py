@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float, DateTime
 from db.database import Base
-from datetime import datetime
+from datetime import datetime, UTC
 
 
 class MathRequest(Base):
@@ -10,7 +10,7 @@ class MathRequest(Base):
     param1 = Column(Float, nullable=True)
     param2 = Column(Float, nullable=True)
     result = Column(String)
-    timestamp = Column(DateTime, default=datetime.utcnow)
+    timestamp = Column(DateTime, default=lambda: datetime.now(UTC))
 
 
 class LogEntry(Base):

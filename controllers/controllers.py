@@ -6,7 +6,7 @@ from services.services import calculate_factorial, persist_request
 from db.database import get_db
 from fastapi.security import OAuth2PasswordRequestForm
 from jose import JWTError, jwt
-from datetime import datetime, timedelta
+from datetime import datetime,UTC, timedelta
 from fastapi.security import OAuth2PasswordBearer
 from models.models import User, MathRequest, LogEntry
 from schemas.schemas import UserCreate
@@ -72,7 +72,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.now(UTC) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     token = jwt.encode(
         {"sub": user.username, "role": user.role, "exp": expire},
         SECRET_KEY, algorithm=ALGORITHM
