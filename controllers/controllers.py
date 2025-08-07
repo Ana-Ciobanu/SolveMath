@@ -13,6 +13,7 @@ from schemas.schemas import UserCreate
 from passlib.context import CryptContext
 import os
 from dotenv import load_dotenv
+import logging
 
 load_dotenv()
 
@@ -43,14 +44,16 @@ def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter()
 
 
 @router.post("/register")
 def register(user: UserCreate, db: Session = Depends(get_db)):
-
     # Prevent registration with username 'admin'
     if user.username.lower() == "admin":
+        logger.error("Attempted registration with reserved username 'admin'")
         raise HTTPException(
             status_code=400, detail="Registration with username 'admin' is not allowed"
         )
@@ -58,6 +61,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     # Check if user exists
     db_user = db.query(User).filter(User.username == user.username).first()
     if db_user:
+        logger.error(f"Attempted registration with already registered username '{user.username}'")
         raise HTTPException(status_code=400, detail="Username already registered")
 
     hashed_pw = get_password_hash(user.password)
@@ -74,6 +78,7 @@ def login(
 ):
     user = db.query(User).filter(User.username == form_data.username).first()
     if not user or not verify_password(form_data.password, user.hashed_password):
+        logger.error(f"Failed login attempt for username '{form_data.username}'")
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     expire = datetime.now(UTC) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -127,6 +132,7 @@ def get_math_requests(
     db: Session = Depends(get_db), token: dict = Depends(verify_token)
 ):
     if token.get("role") != "admin":
+        logger.error("Unauthorized access attempt to /admin/requests")
         raise HTTPException(status_code=403, detail="Admin access required")
     requests = (
         db.query(MathRequest).order_by(MathRequest.timestamp.desc()).limit(100).all()
@@ -147,6 +153,7 @@ def get_math_requests(
 @router.get("/admin/logs")
 def get_log_entries(db: Session = Depends(get_db), token: dict = Depends(verify_token)):
     if token.get("role") != "admin":
+        logger.error("Unauthorized access attempt to /admin/logs")
         raise HTTPException(status_code=403, detail="Admin access required")
     logs = db.query(LogEntry).order_by(LogEntry.timestamp.desc()).limit(100).all()
     return [
