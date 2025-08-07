@@ -1,5 +1,3 @@
-
-from sqlalchemy.orm import Session
 from models.models import User
 from controllers.controllers import get_password_hash
 from db.database import SessionLocal
@@ -7,6 +5,7 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
+
 
 def create_admin_if_not_exists():
     db = SessionLocal()
@@ -18,7 +17,7 @@ def create_admin_if_not_exists():
             admin = User(
                 username=admin_username,
                 hashed_password=get_password_hash(admin_password),
-                role="admin"
+                role="admin",
             )
             db.add(admin)
             db.commit()
@@ -28,5 +27,6 @@ def create_admin_if_not_exists():
             print(f"Admin user '{admin_username}' already exists.")
     finally:
         db.close()
+
 
 create_admin_if_not_exists()

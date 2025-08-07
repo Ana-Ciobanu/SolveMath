@@ -2,16 +2,15 @@ import pytest
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi_cache.decorator import cache
-from freezegun import freeze_time
 import services.services as services
 from unittest.mock import AsyncMock
 
+
 @pytest.fixture(autouse=True)
 def init_cache():
-    """
-    Initialize an in-memory cache before each test.
-    """
+    # Initialize an in-memory cache before each test.
     FastAPICache.init(InMemoryBackend(), prefix="test")
+
 
 @pytest.mark.asyncio
 async def test_calculate_pow_caching(monkeypatch):
@@ -22,11 +21,7 @@ async def test_calculate_pow_caching(monkeypatch):
     spy.__wrapped__ = original_logic
 
     # Patch the service function with a new cached spy
-    monkeypatch.setattr(
-        services,
-        'calculate_pow',
-        cache(expire=3600)(spy)
-    )
+    monkeypatch.setattr(services, "calculate_pow", cache(expire=3600)(spy))
 
     # First call: logic should execute once
     result1 = await services.calculate_pow(2, 3)
@@ -43,6 +38,7 @@ async def test_calculate_pow_caching(monkeypatch):
     assert result3 == 9
     assert spy.await_count == 2
 
+
 @pytest.mark.asyncio
 async def test_calculate_fibonacci_caching(monkeypatch):
     original_logic = services.calculate_fibonacci.__wrapped__
@@ -50,11 +46,7 @@ async def test_calculate_fibonacci_caching(monkeypatch):
     spy.__name__ = original_logic.__name__
     spy.__wrapped__ = original_logic
 
-    monkeypatch.setattr(
-        services,
-        'calculate_fibonacci',
-        cache(expire=3600)(spy)
-    )
+    monkeypatch.setattr(services, "calculate_fibonacci", cache(expire=3600)(spy))
 
     # First call
     result1 = await services.calculate_fibonacci(10)
@@ -71,6 +63,7 @@ async def test_calculate_fibonacci_caching(monkeypatch):
     assert result3 == 34
     assert spy.await_count == 2
 
+
 @pytest.mark.asyncio
 async def test_calculate_factorial_caching(monkeypatch):
     original_logic = services.calculate_factorial.__wrapped__
@@ -78,11 +71,7 @@ async def test_calculate_factorial_caching(monkeypatch):
     spy.__name__ = original_logic.__name__
     spy.__wrapped__ = original_logic
 
-    monkeypatch.setattr(
-        services,
-        'calculate_factorial',
-        cache(expire=3600)(spy)
-    )
+    monkeypatch.setattr(services, "calculate_factorial", cache(expire=3600)(spy))
 
     # First call
     result1 = await services.calculate_factorial(5)

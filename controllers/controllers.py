@@ -6,7 +6,7 @@ from services.services import calculate_factorial, persist_request
 from db.database import get_db
 from fastapi.security import OAuth2PasswordRequestForm
 from jose import JWTError, jwt
-from datetime import datetime,UTC, timedelta
+from datetime import datetime, UTC, timedelta
 from fastapi.security import OAuth2PasswordBearer
 from models.models import User, MathRequest, LogEntry
 from schemas.schemas import UserCreate
@@ -51,7 +51,9 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
 
     # Prevent registration with username 'admin'
     if user.username.lower() == "admin":
-        raise HTTPException(status_code=400, detail="Registration with username 'admin' is not allowed")
+        raise HTTPException(
+            status_code=400, detail="Registration with username 'admin' is not allowed"
+        )
 
     # Check if user exists
     db_user = db.query(User).filter(User.username == user.username).first()
@@ -67,7 +69,9 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
 
 
 @router.post("/login")
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+def login(
+    form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)
+):
     user = db.query(User).filter(User.username == form_data.username).first()
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
@@ -75,25 +79,32 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     expire = datetime.now(UTC) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     token = jwt.encode(
         {"sub": user.username, "role": user.role, "exp": expire},
-        SECRET_KEY, algorithm=ALGORITHM
+        SECRET_KEY,
+        algorithm=ALGORITHM,
     )
     return {"access_token": token, "token_type": "bearer"}
 
 
 @router.post("/pow", response_model=MathResponse)
 async def pow_endpoint(
-    request: PowRequest, db: Session = Depends(get_db), token: dict = Depends(verify_token)
+    request: PowRequest,
+    db: Session = Depends(get_db),
+    token: dict = Depends(verify_token),
 ):
     result = await calculate_pow(request.base, request.exponent)
     persist_request(db, "pow", request.base, request.exponent, result)
     return MathResponse(
-        operation="pow", input={"base": request.base, "exponent": request.exponent}, result=result
+        operation="pow",
+        input={"base": request.base, "exponent": request.exponent},
+        result=result,
     )
 
 
 @router.post("/fibonacci", response_model=MathResponse)
 async def fibonacci_endpoint(
-    request: FibonacciRequest, db: Session = Depends(get_db), token: dict = Depends(verify_token)
+    request: FibonacciRequest,
+    db: Session = Depends(get_db),
+    token: dict = Depends(verify_token),
 ):
     result = await calculate_fibonacci(request.n)
     persist_request(db, "fibonacci", request.n, None, result)
@@ -102,7 +113,9 @@ async def fibonacci_endpoint(
 
 @router.post("/factorial", response_model=MathResponse)
 async def factorial_endpoint(
-    request: FactorialRequest, db: Session = Depends(get_db), token: dict = Depends(verify_token)
+    request: FactorialRequest,
+    db: Session = Depends(get_db),
+    token: dict = Depends(verify_token),
 ):
     result = await calculate_factorial(request.n)
     persist_request(db, "factorial", request.n, None, result)
@@ -110,10 +123,14 @@ async def factorial_endpoint(
 
 
 @router.get("/admin/requests")
-def get_math_requests(db: Session = Depends(get_db), token: dict = Depends(verify_token)):
+def get_math_requests(
+    db: Session = Depends(get_db), token: dict = Depends(verify_token)
+):
     if token.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
-    requests = db.query(MathRequest).order_by(MathRequest.timestamp.desc()).limit(100).all()
+    requests = (
+        db.query(MathRequest).order_by(MathRequest.timestamp.desc()).limit(100).all()
+    )
     return [
         {
             "id": r.id,
@@ -121,7 +138,7 @@ def get_math_requests(db: Session = Depends(get_db), token: dict = Depends(verif
             "param1": r.param1,
             "param2": r.param2,
             "result": r.result,
-            "timestamp": r.timestamp.isoformat()
+            "timestamp": r.timestamp.isoformat(),
         }
         for r in requests
     ]
@@ -134,10 +151,10 @@ def get_log_entries(db: Session = Depends(get_db), token: dict = Depends(verify_
     logs = db.query(LogEntry).order_by(LogEntry.timestamp.desc()).limit(100).all()
     return [
         {
-            "id": l.id,
-            "level": l.level,
-            "message": l.message,
-            "timestamp": l.timestamp.isoformat()
+            "id": log_entry.id,
+            "level": log_entry.level,
+            "message": log_entry.message,
+            "timestamp": log_entry.timestamp.isoformat(),
         }
-        for l in logs
+        for log_entry in logs
     ]

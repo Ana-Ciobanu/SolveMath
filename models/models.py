@@ -18,7 +18,7 @@ class LogEntry(Base):
     id = Column(Integer, primary_key=True, index=True)
     level = Column(String)
     message = Column(String)
-    timestamp = Column(DateTime, default=datetime.utcnow)
+    timestamp = Column(DateTime, default=lambda: datetime.now(UTC))
 
 
 class User(Base):

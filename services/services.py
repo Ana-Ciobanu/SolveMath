@@ -6,7 +6,7 @@ from fastapi_cache.decorator import cache
 logger = logging.getLogger(__name__)
 
 
-@cache(expire=3600) # Cache for 1 hour
+@cache(expire=3600)  # Cache for 1 hour
 async def calculate_pow(base: float, exponent: float) -> float:
     try:
         logger.info(f"Calculating pow({base}, {exponent})")
@@ -50,7 +50,9 @@ async def calculate_factorial(n: int) -> int:
 
 def persist_request(db: Session, operation: str, param1, param2, result):
     try:
-        req = MathRequest(operation=operation, param1=param1, param2=param2, result=str(result))
+        req = MathRequest(
+            operation=operation, param1=param1, param2=param2, result=str(result)
+        )
         db.add(req)
         db.commit()
         logger.info(

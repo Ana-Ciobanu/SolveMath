@@ -14,8 +14,17 @@ from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 from controllers.controllers import verify_token
 from fastapi.responses import Response
 
+from contextlib import asynccontextmanager
 
-app = FastAPI(title="Math Operations API", version="1.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    FastAPICache.init(InMemoryBackend())
+    yield
+
+
+app = FastAPI(title="Math Operations API", version="1.0", lifespan=lifespan)
+
 app.include_router(router)
 
 
@@ -41,11 +50,6 @@ def admin_metrics(token: dict = Depends(verify_token)):
     if token.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
     return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
-
-
-@app.on_event("startup")
-async def startup():
-    FastAPICache.init(InMemoryBackend())
 
 
 setup_monitoring(app)
