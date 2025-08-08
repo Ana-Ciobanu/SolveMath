@@ -66,8 +66,14 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
 
     hashed_pw = get_password_hash(user.password)
     new_user = User(username=user.username, hashed_password=hashed_pw, role="user")
-    db.add(new_user)
-    db.commit()
+    try:
+        db.add(new_user)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Database error during registration: {e}")
+        raise HTTPException(status_code=500, detail="Database error")
+
     db.refresh(new_user)
     return {"message": "User registered successfully"}
 
