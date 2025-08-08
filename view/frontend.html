@@ -317,7 +317,8 @@
         document.getElementById("metrics-btn").onclick = async function () {
             const output = document.getElementById("metrics-output");
             const toggledOn = setActiveAdminPanel("metrics");
-            if (toggledOn && (output.innerText === "")) {
+            if (toggledOn) {
+                output.innerText = "Loading...";
                 try {
                     const res = await fetch("/admin/metrics", {
                         headers: { "Authorization": "Bearer " + accessToken }
@@ -337,7 +338,8 @@
         document.getElementById("requests-btn").onclick = async function () {
             const output = document.getElementById("requests-output");
             const toggledOn = setActiveAdminPanel("requests");
-            if (toggledOn && (output.innerText === "")) {
+            if (toggledOn) {
+                output.innerText = "Loading...";
                 try {
                     const res = await fetch("/admin/requests", {
                         headers: { "Authorization": "Bearer " + accessToken }
@@ -357,7 +359,8 @@
         document.getElementById("logs-btn").onclick = async function () {
             const output = document.getElementById("logs-output");
             const toggledOn = setActiveAdminPanel("logs");
-            if (toggledOn && (output.innerText === "")) {
+            if (toggledOn) {
+                output.innerText = "Loading...";
                 try {
                     const res = await fetch("/admin/logs", {
                         headers: { "Authorization": "Bearer " + accessToken }

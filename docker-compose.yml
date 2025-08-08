@@ -1,0 +1,21 @@
+services:
+  fastapi:
+    build: .
+    container_name: mymathapp
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/SolveMath
+      - ./db:/SolveMath/db
+    working_dir: /SolveMath
+    environment:
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - redis
+    command: uvicorn app:app --host 0.0.0.0 --port 8000 --reload
+
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6379:6379"

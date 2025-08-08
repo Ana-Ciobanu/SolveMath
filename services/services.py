@@ -2,8 +2,12 @@ import logging
 from sqlalchemy.orm import Session
 from models.models import MathRequest
 from fastapi_cache.decorator import cache
+import redis
 
 logger = logging.getLogger(__name__)
+
+# Create a Redis client
+redis_client = redis.Redis(host="redis", port=6379, db=0)
 
 
 @cache(expire=3600)  # Cache for 1 hour
@@ -61,3 +65,17 @@ def persist_request(db: Session, operation: str, param1, param2, result):
     except Exception as e:
         logger.error(f"Error persisting request: {e}")
         db.rollback()
+    # Redis Streams integration
+    try:
+        redis_client.xadd(
+            "math_requests",
+            {
+                "operation": str(operation),
+                "param1": str(param1) if param1 is not None else "",
+                "param2": str(param2) if param2 is not None else "",
+                "result": str(result),
+            }
+        )
+        logger.info("Request also sent to Redis Stream 'math_requests'")
+    except Exception as re:
+        logger.error(f"Failed to send request to Redis Stream: {re}")
