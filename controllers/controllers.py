@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, BackgroundTasks
 from sqlalchemy.orm import Session
 from schemas.schemas import PowRequest, FibonacciRequest, FactorialRequest, MathResponse
 from services.services import calculate_pow, calculate_fibonacci
@@ -7,7 +7,6 @@ from db.database import get_db
 from fastapi.security import OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from datetime import datetime, UTC, timedelta
-from fastapi.security import OAuth2PasswordBearer
 from models.models import User, MathRequest, LogEntry
 from schemas.schemas import UserCreate
 from passlib.context import CryptContext
@@ -22,9 +21,6 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def get_password_hash(password):
     return pwd_context.hash(password)
-
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 
 SECRET_KEY = os.getenv("SECRET_KEY")
@@ -136,9 +132,11 @@ async def pow_endpoint(
     request: PowRequest,
     db: Session = Depends(get_db),
     token: dict = Depends(get_token_from_cookie),
+    background_tasks: BackgroundTasks = None,
 ):
     result = await calculate_pow(request.base, request.exponent)
-    persist_request(db, "pow", request.base, request.exponent, result)
+    # Schedule persist_request to run in the background
+    background_tasks.add_task(persist_request, db, "pow", request.base, request.exponent, result)
     return MathResponse(
         operation="pow",
         input={"base": request.base, "exponent": request.exponent},
@@ -151,9 +149,10 @@ async def fibonacci_endpoint(
     request: FibonacciRequest,
     db: Session = Depends(get_db),
     token: dict = Depends(get_token_from_cookie),
+    background_tasks: BackgroundTasks = None,
 ):
     result = await calculate_fibonacci(request.n)
-    persist_request(db, "fibonacci", request.n, None, result)
+    background_tasks.add_task(persist_request, db, "fibonacci", request.n, None, result)
     return MathResponse(operation="fibonacci", input={"n": request.n}, result=result)
 
 
@@ -162,9 +161,10 @@ async def factorial_endpoint(
     request: FactorialRequest,
     db: Session = Depends(get_db),
     token: dict = Depends(get_token_from_cookie),
+    background_tasks: BackgroundTasks = None,
 ):
     result = await calculate_factorial(request.n)
-    persist_request(db, "factorial", request.n, None, result)
+    background_tasks.add_task(persist_request, db, "factorial", request.n, None, result)
     return MathResponse(operation="factorial", input={"n": request.n}, result=result)
 
 

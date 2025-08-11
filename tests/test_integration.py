@@ -72,40 +72,40 @@ def client():
     return TestClient(app)
 
 
-# Helper to login and retrieve bearer token
-def get_token(client: TestClient, username: str, password: str):
-    # Use OAuth2PasswordRequestForm
+# Helper to login and return a client with cookies set
+def login_with_cookies(client: TestClient, username: str, password: str):
     data = {"username": username, "password": password}
     resp = client.post("/login", data=data)
     assert resp.status_code == 200, f"Login failed: {resp.text}"
-    return resp.json()["access_token"]
+    return client
 
 
-# Integration Tests
 def test_register_and_login(client):
     resp = client.post("/register", json={"username": "alice", "password": "alicepass"})
     assert resp.status_code == 200
     assert resp.json()["message"] == "User registered successfully"
 
-    token = get_token(client, "alice", "alicepass")
-    assert isinstance(token, str)
+    # Login and check /me
+    login_with_cookies(client, "alice", "alicepass")
+    resp = client.get("/me")
+    assert resp.status_code == 200
+    assert resp.json()["username"] == "alice"
 
 
 def test_math_endpoints_and_persistence(client):
     client.post("/register", json={"username": "bob", "password": "bobpass"})
-    token = get_token(client, "bob", "bobpass")
-    headers = {"Authorization": f"Bearer {token}"}
+    login_with_cookies(client, "bob", "bobpass")
 
-    resp = client.post("/pow", headers=headers, json={"base": 2, "exponent": 3})
+    resp = client.post("/pow", json={"base": 2, "exponent": 3})
     assert resp.status_code == 200
     data = resp.json()
     assert data["result"] == 8
 
-    resp = client.post("/fibonacci", headers=headers, json={"n": 7})
+    resp = client.post("/fibonacci", json={"n": 7})
     assert resp.status_code == 200
     assert resp.json()["result"] == 13
 
-    resp = client.post("/factorial", headers=headers, json={"n": 5})
+    resp = client.post("/factorial", json={"n": 5})
     assert resp.status_code == 200
     assert resp.json()["result"] == 120
 
@@ -120,25 +120,23 @@ def test_math_endpoints_and_persistence(client):
 
 def test_rbac_admin_endpoints(client):
     client.post("/register", json={"username": "carol", "password": "carolpass"})
-    user_token = get_token(client, "carol", "carolpass")
-    user_headers = {"Authorization": f"Bearer {user_token}"}
+    login_with_cookies(client, "carol", "carolpass")
 
     # Normal user cannot access admin endpoints
     for path in ("/admin/requests", "/admin/logs"):
-        resp = client.get(path, headers=user_headers)
+        resp = client.get(path)
         assert resp.status_code == 403
 
     # Login as seeded admin
-    admin_token = get_token(client, "superadmin", "adminpass")
-    admin_headers = {"Authorization": f"Bearer {admin_token}"}
+    login_with_cookies(client, "superadmin", "adminpass")
 
     # Admin can list requests
-    resp = client.get("/admin/requests", headers=admin_headers)
+    resp = client.get("/admin/requests")
     assert resp.status_code == 200
     assert isinstance(resp.json(), list)
 
     # Admin can list logs
-    resp = client.get("/admin/logs", headers=admin_headers)
+    resp = client.get("/admin/logs")
     assert resp.status_code == 200
     assert isinstance(resp.json(), list)
 
@@ -146,19 +144,17 @@ def test_rbac_admin_endpoints(client):
 def test_admin_metrics_access(client):
     # Register and login as a normal user
     client.post("/register", json={"username": "dave", "password": "davepass"})
-    user_token = get_token(client, "dave", "davepass")
-    user_headers = {"Authorization": f"Bearer {user_token}"}
+    login_with_cookies(client, "dave", "davepass")
 
     # Normal user should be forbidden
-    resp = client.get("/admin/metrics", headers=user_headers)
+    resp = client.get("/admin/metrics")
     assert resp.status_code == 403
 
     # Login as seeded admin
-    admin_token = get_token(client, "superadmin", "adminpass")
-    admin_headers = {"Authorization": f"Bearer {admin_token}"}
+    login_with_cookies(client, "superadmin", "adminpass")
 
     # Admin should have access and receive Prometheus metrics
-    resp = client.get("/admin/metrics", headers=admin_headers)
+    resp = client.get("/admin/metrics")
     assert resp.status_code == 200
     assert resp.headers["content-type"].startswith("text/plain")
     assert b"# HELP" in resp.content  # Prometheus metrics
