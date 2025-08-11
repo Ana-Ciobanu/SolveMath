@@ -48,6 +48,14 @@ This project implements a microservice for solving mathematical operations via a
 
 ## Running the Service
 
+### Option 1: Using Docker Compose
+
+1. Build and start all services (FastAPI, Redis):
+   `docker compose up --build`
+2. Access the frontend at `http://localhost:8000`
+
+### Option 2: Manual Setup
+
 1. Install dependencies:  
    `pip install -r requirements.txt`
 2. Set up your `.env` file with the required environment variables.
