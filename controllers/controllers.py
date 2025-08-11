@@ -40,11 +40,15 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+
 def create_access_token(data: dict, expires_delta: timedelta = None):
     to_encode = data.copy()
-    expire = datetime.now(UTC) + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    expire = datetime.now(UTC) + (
+        expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
 
 def get_token_from_cookie(request: Request):
     token = request.cookies.get("access_token")
@@ -69,7 +73,9 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     # Check if user exists
     db_user = db.query(User).filter(User.username == user.username).first()
     if db_user:
-        logger.error(f"Attempted registration with already registered username '{user.username}'")
+        logger.error(
+            f"Attempted registration with already registered username '{user.username}'"
+        )
         raise HTTPException(status_code=400, detail="Username already registered")
 
     hashed_pw = get_password_hash(user.password)
@@ -97,22 +103,28 @@ def login(
 
     token = create_access_token({"sub": user.username, "role": user.role})
     # Set HTTP-only cookie
-    response = Response(content='{"message": "Login successful"}', media_type="application/json")
+    response = Response(
+        content='{"message": "Login successful"}', media_type="application/json"
+    )
     response.set_cookie(
         key="access_token",
         value=token,
         httponly=True,
         secure=os.getenv("HTTP_SECURE") == "True",
         samesite="lax",
-        max_age=60*60*24
+        max_age=60 * 60 * 24,
     )
     return response
 
+
 @router.post("/logout")
 def logout(response: Response):
-    response = Response(content='{"message": "Logged out"}', media_type="application/json")
+    response = Response(
+        content='{"message": "Logged out"}', media_type="application/json"
+    )
     response.delete_cookie("access_token")
     return response
+
 
 @router.get("/me")
 def get_current_user(token: dict = Depends(get_token_from_cookie)):
@@ -180,7 +192,9 @@ def get_math_requests(
 
 
 @router.get("/admin/logs")
-def get_log_entries(db: Session = Depends(get_db), token: dict = Depends(get_token_from_cookie)):
+def get_log_entries(
+    db: Session = Depends(get_db), token: dict = Depends(get_token_from_cookie)
+):
     if token.get("role") != "admin":
         logger.error("Unauthorized access attempt to /admin/logs")
         raise HTTPException(status_code=403, detail="Admin access required")

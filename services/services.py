@@ -74,7 +74,7 @@ def persist_request(db: Session, operation: str, param1, param2, result):
                 "param1": str(param1) if param1 is not None else "",
                 "param2": str(param2) if param2 is not None else "",
                 "result": str(result),
-            }
+            },
         )
         logger.info("Request also sent to Redis Stream 'math_requests'")
     except Exception as re:
