@@ -1,10 +1,12 @@
 # Math Operations Microservice
 
-![Python](https://img.shields.io/badge/python-3.11-blue)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.110.0-green)
-![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0.30-blue)
-![JWT](https://img.shields.io/badge/JWT-python--jose-yellow)
-![Redis](https://img.shields.io/badge/Redis-Streaming-red)
+<a href="https://www.python.org/" target="_blank"><img src="https://img.shields.io/badge/python-3.13-blue" alt="Python Version"></a>
+<a href="https://fastapi.tiangolo.com/" target="_blank"><img src="https://img.shields.io/badge/FastAPI-0.110.0-green" alt="FastAPI"></a>
+<a href="https://www.sqlalchemy.org/" target="_blank"><img src="https://img.shields.io/badge/SQLAlchemy-2.0.30-blue" alt="SQLAlchemy"></a>
+<a href="https://python-jose.readthedocs.io/" target="_blank"><img src="https://img.shields.io/badge/JWT-python--jose-yellow" alt="JWT"></a>
+<a href="https://redis.io/" target="_blank"><img src="https://img.shields.io/badge/Redis-Streaming-red" alt="Redis"></a>
+<a href="https://prometheus.io/" target="_blank"><img src="https://img.shields.io/badge/Prometheus-Monitoring-orange" alt="Prometheus"></a>
+
 ## Overview
 
 This project implements a microservice for solving mathematical operations via a RESTful API. The service supports three main operations: calculating the power of a number, finding the n-th Fibonacci number, and computing the factorial of a number. The service is built using FastAPI, follows best practices for microservice architecture, and is designed for extensibility, maintainability, and security.
