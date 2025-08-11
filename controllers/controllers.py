@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy.orm import Session
 from schemas.schemas import PowRequest, FibonacciRequest, FactorialRequest, MathResponse
 from services.services import calculate_pow, calculate_fibonacci
@@ -27,14 +27,6 @@ def get_password_hash(password):
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 
-def verify_token(token: str = Depends(oauth2_scheme)):
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        return payload
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
-
-
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
@@ -47,6 +39,22 @@ def verify_password(plain_password, hashed_password):
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+def create_access_token(data: dict, expires_delta: timedelta = None):
+    to_encode = data.copy()
+    expire = datetime.now(UTC) + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+def get_token_from_cookie(request: Request):
+    token = request.cookies.get("access_token")
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
 
 
 @router.post("/register")
@@ -87,20 +95,35 @@ def login(
         logger.error(f"Failed login attempt for username '{form_data.username}'")
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    expire = datetime.now(UTC) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    token = jwt.encode(
-        {"sub": user.username, "role": user.role, "exp": expire},
-        SECRET_KEY,
-        algorithm=ALGORITHM,
+    token = create_access_token({"sub": user.username, "role": user.role})
+    # Set HTTP-only cookie
+    response = Response(content='{"message": "Login successful"}', media_type="application/json")
+    response.set_cookie(
+        key="access_token",
+        value=token,
+        httponly=True,
+        secure=os.getenv("HTTP_SECURE") == "True",
+        samesite="lax",
+        max_age=60*60*24
     )
-    return {"access_token": token, "token_type": "bearer"}
+    return response
+
+@router.post("/logout")
+def logout(response: Response):
+    response = Response(content='{"message": "Logged out"}', media_type="application/json")
+    response.delete_cookie("access_token")
+    return response
+
+@router.get("/me")
+def get_current_user(token: dict = Depends(get_token_from_cookie)):
+    return {"username": token["sub"], "role": token["role"]}
 
 
 @router.post("/pow", response_model=MathResponse)
 async def pow_endpoint(
     request: PowRequest,
     db: Session = Depends(get_db),
-    token: dict = Depends(verify_token),
+    token: dict = Depends(get_token_from_cookie),
 ):
     result = await calculate_pow(request.base, request.exponent)
     persist_request(db, "pow", request.base, request.exponent, result)
@@ -115,7 +138,7 @@ async def pow_endpoint(
 async def fibonacci_endpoint(
     request: FibonacciRequest,
     db: Session = Depends(get_db),
-    token: dict = Depends(verify_token),
+    token: dict = Depends(get_token_from_cookie),
 ):
     result = await calculate_fibonacci(request.n)
     persist_request(db, "fibonacci", request.n, None, result)
@@ -126,7 +149,7 @@ async def fibonacci_endpoint(
 async def factorial_endpoint(
     request: FactorialRequest,
     db: Session = Depends(get_db),
-    token: dict = Depends(verify_token),
+    token: dict = Depends(get_token_from_cookie),
 ):
     result = await calculate_factorial(request.n)
     persist_request(db, "factorial", request.n, None, result)
@@ -135,7 +158,7 @@ async def factorial_endpoint(
 
 @router.get("/admin/requests")
 def get_math_requests(
-    db: Session = Depends(get_db), token: dict = Depends(verify_token)
+    db: Session = Depends(get_db), token: dict = Depends(get_token_from_cookie)
 ):
     if token.get("role") != "admin":
         logger.error("Unauthorized access attempt to /admin/requests")
@@ -157,7 +180,7 @@ def get_math_requests(
 
 
 @router.get("/admin/logs")
-def get_log_entries(db: Session = Depends(get_db), token: dict = Depends(verify_token)):
+def get_log_entries(db: Session = Depends(get_db), token: dict = Depends(get_token_from_cookie)):
     if token.get("role") != "admin":
         logger.error("Unauthorized access attempt to /admin/logs")
         raise HTTPException(status_code=403, detail="Admin access required")

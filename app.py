@@ -11,7 +11,7 @@ from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi import Depends, HTTPException
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
-from controllers.controllers import verify_token
+from controllers.controllers import get_token_from_cookie
 from fastapi.responses import Response
 
 from contextlib import asynccontextmanager
@@ -46,7 +46,7 @@ def read_root():
 
 
 @app.get("/admin/metrics", tags=["Admin"])
-def admin_metrics(token: dict = Depends(verify_token)):
+def admin_metrics(token: dict = Depends(get_token_from_cookie)):
     if token.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
     return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)

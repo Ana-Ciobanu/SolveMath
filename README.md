@@ -11,26 +11,25 @@ This project implements a microservice for solving mathematical operations via a
 ## Features
 
 - **RESTful API**: Exposes endpoints for mathematical operations using POST requests with Pydantic-based request/response models.
-- **User Authentication & Authorization**: Implements JWT-based authentication. Only authenticated users can access the math endpoints, and only users with the `admin` role can access the `/admin/metrics`, `/admin/requests`, `/admin/logs` endpoints.
-- **Database Persistence**: All requests to the API are persisted in a SQLite database using SQLAlchemy ORM. This allows for auditing and analytics.
+- **User Authentication & Authorization**: Implements JWT-based authentication via HTTP-only cookies. Only authenticated users can access the math endpoints, and only users with the `admin` role can access the `/admin/metrics`, `/admin/requests`, `/admin/logs` endpoints.
+- **Database Persistence**: All requests to the API are persisted in a SQLite database using SQLAlchemy ORM **and** are also published to a Redis Stream for real-time processing, analytics, or integration with other services.
 - **Caching**: Results of mathematical operations are cached in-memory for improved performance and reduced computation time.
 - **Logging**: All significant events and errors are logged to a dedicated database table.
 - **Monitoring**: The service exposes Prometheus-compatible metrics at `/admin/metrics`, protected by admin authorization.
 - **Frontend**: A simple HTML/JavaScript frontend is provided for user registration, login, and interacting with the API.
 
-## Security & Production Readiness
-
-- **Secure Configuration Management**: All sensitive configuration (JWT secret, algorithm, token expiry) is stored in a `.env` file and loaded using `python-dotenv`. No data is hardcoded in the codebase.
-- **Role-Based Access Control (RBAC)**: User roles are stored in the database. All users registered via the frontend or API are assigned the `user` role by default. The `admin` role is reserved and cannot be registered via the public API. Admin accounts are created securely using environment variables and a dedicated script. Only users with the `admin` role can access sensitive endpoints like metrics, logs, and requests.
-- **Input Validation**: Both frontend and backend validate user input to prevent invalid or malicious requests.
-- **Extensibility**: The codebase is organized using MVC/MVCS patterns, making it easy to add new operations or extend functionality.
-
 ## How It Works
 
-1. **User Registration & Login**: Users register and log in via the frontend. On successful login, a JWT token is issued.
-2. **Authorization**: The frontend stores the JWT and includes it in the `Authorization` header for all API requests.
+1. **User Registration & Login**: Users register and log in via the frontend. On successful login, the backend issues a JWT token as an **HTTP-only cookie**.
+2. **Authorization**: The frontend does **not** store or access the JWT token directly. Instead, all API requests are made with `credentials: "include"` so the browser automatically sends the authentication cookie.
 3. **Math Operations**: Authenticated users can access endpoints for power, Fibonacci, and factorial calculations. Requests are validated, processed, cached, logged, and persisted.
-4. **Admin Metrics**: Admin users can view service metrics via the `/admin/metrics` endpoint, requests to the math operations API via the `/admin/requests`, logs via the `/admin/logs`.
+4. **Admin Metrics**: Admin users can view service metrics via the `/admin/metrics` endpoint, requests to the math operations API via `/admin/requests`, and logs via `/admin/logs`. The frontend determines admin access by calling the `/me` endpoint, which returns the user's role.
+
+## Security & Production Readiness
+
+- **HTTP-only Cookie Authentication**: Authentication tokens are stored as HTTP-only cookies, which are not accessible to JavaScript, providing protection against XSS attacks.
+- **Frontend Authorization**: The frontend checks authentication and user role by calling the `/me` endpoint after login and on page load, and shows/hides admin features accordingly.
+- **No Token in JS**: The frontend never stores or decodes JWT tokens in JavaScript; all authentication is handled via secure cookies.
 
 ## Technologies Used
 
@@ -58,4 +57,4 @@ This project implements a microservice for solving mathematical operations via a
 **RBAC Summary:**
     - All users are assigned the `user` role by default.
     - The `admin` role is only assigned via the admin creation script and cannot be set through registration.
-    - JWT tokens include the user's role, which is checked for access to protected endpoints.
+    - The user's role is checked for access to protected endpoints.
