@@ -52,15 +52,19 @@ async def calculate_factorial(n: int) -> int:
         raise
 
 
-def persist_request(db: Session, operation: str, param1, param2, result):
+def persist_request(db: Session, operation: str, param1, param2, result, username):
     try:
         req = MathRequest(
-            operation=operation, param1=param1, param2=param2, result=str(result)
+            operation=operation,
+            param1=param1,
+            param2=param2,
+            result=str(result),
+            username=username, 
         )
         db.add(req)
         db.commit()
         logger.info(
-            f"Persisted request: {operation} with params {param1}, {param2} and result {result}"
+            f"Persisted request: {operation} by {username} with params {param1}, {param2} and result {result}"
         )
     except Exception as e:
         logger.error(f"Error persisting request: {e}")
@@ -74,6 +78,7 @@ def persist_request(db: Session, operation: str, param1, param2, result):
                 "param1": str(param1) if param1 is not None else "",
                 "param2": str(param2) if param2 is not None else "",
                 "result": str(result),
+                "username": str(username), 
             },
         )
         logger.info("Request also sent to Redis Stream 'math_requests'")

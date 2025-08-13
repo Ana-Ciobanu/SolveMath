@@ -135,8 +135,9 @@ async def pow_endpoint(
     background_tasks: BackgroundTasks = None,
 ):
     result = await calculate_pow(request.base, request.exponent)
-    # Schedule persist_request to run in the background
-    background_tasks.add_task(persist_request, db, "pow", request.base, request.exponent, result)
+    background_tasks.add_task(
+        persist_request, db, "pow", request.base, request.exponent, result, token["sub"]
+    )
     return MathResponse(
         operation="pow",
         input={"base": request.base, "exponent": request.exponent},
@@ -152,7 +153,9 @@ async def fibonacci_endpoint(
     background_tasks: BackgroundTasks = None,
 ):
     result = await calculate_fibonacci(request.n)
-    background_tasks.add_task(persist_request, db, "fibonacci", request.n, None, result)
+    background_tasks.add_task(
+        persist_request, db, "fibonacci", request.n, None, result, token["sub"]
+    )
     return MathResponse(operation="fibonacci", input={"n": request.n}, result=result)
 
 
@@ -164,7 +167,9 @@ async def factorial_endpoint(
     background_tasks: BackgroundTasks = None,
 ):
     result = await calculate_factorial(request.n)
-    background_tasks.add_task(persist_request, db, "factorial", request.n, None, result)
+    background_tasks.add_task(
+        persist_request, db, "factorial", request.n, None, result, token["sub"]
+    )
     return MathResponse(operation="factorial", input={"n": request.n}, result=result)
 
 
@@ -186,6 +191,7 @@ def get_math_requests(
             "param2": r.param2,
             "result": r.result,
             "timestamp": r.timestamp.isoformat(),
+            "username": r.username,
         }
         for r in requests
     ]

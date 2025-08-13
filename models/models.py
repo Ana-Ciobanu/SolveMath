@@ -11,6 +11,7 @@ class MathRequest(Base):
     param2 = Column(Float, nullable=True)
     result = Column(String)
     timestamp = Column(DateTime, default=lambda: datetime.now(UTC))
+    username = Column(String, index=True)  # Add this line
 
 
 class LogEntry(Base):
